@@ -1,8 +1,12 @@
 
+#define USE_ARDUINO_INTERRUPTS true
+
+#include "WaterSensor.h"
+#include "PulseSensor.h"
+
 #include "TScreen.h"
 #include "SecuritySystem.h"
 #include "Scenes.h"
-#include "WaterSensor.h"
 
 long lastSenseTime = millis();
 WaterSensor ws;
@@ -25,7 +29,7 @@ void setup() {
   tft.setTextColor(0xFFFF, 0x0000);
   tft.setRotation(Orientation);
 }
-
+long lastSensedTime = 0;
 //Arduino LOOP @16MHz
 void loop() {
 
@@ -33,18 +37,21 @@ void loop() {
     String value = Serial.readString();
     Serial.println(value);
 
-    if (value.indexOf("go_secure") >= 0) {
+    if (value.indexOf("secure") >= 0) {
       changeCurrentScene(SECURE);
     }
-    else if (value.indexOf("go_start") >= 0) {
+    else if (value.indexOf("start") >= 0) {
       changeCurrentScene(START);
+    }
+    else if (value.indexOf("bpm") >= 0){
+      changeCurrentScene(BPM);  
     }
   }
   
   //Tomar los datos de los sensores cada 5 segundos
   if (millis() - lastSensedTime >= 5000){
     lastSensedTime = millis();
-    ws.sense();
+    //ws.sense();
   }
   
   if (hasChanged) {
@@ -56,6 +63,10 @@ void loop() {
 
       case SECURE:
         printSecureScene();
+        break;
+
+      case BPM:
+        printBPMScene();
         break;
     }
   }

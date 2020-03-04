@@ -2,11 +2,12 @@
 //Control de escenas de la pantalla
 enum TftScene {
   START,
-  SECURE
+  SECURE,
+  BPM
 };
 
 //escena actual, en la que se encuentra el sistema
-TftScene currentScene = START;
+TftScene currentScene = BPM;
 //revisa si la escena actual cambio desde la ultima lectura
 boolean hasChanged = true;
 
@@ -40,10 +41,10 @@ int allowPrint(void) {
   //es ingresado en menos de 200 ms de estar presionado
   while (millis() - clickedAt <= 200) {
     while (Touch_getXY()) {
-      if (pixel_y > 230){
-        continue;  
+      if (pixel_y > 230) {
+        continue;
       }
-      
+
       int boxSize = tft.width() / 12;
       tft.fillRect(pixel_x - boxSize * 0.5, pixel_y - boxSize * 0.5, boxSize, boxSize, BLUE);
       //revisar si el punto esta dentro de los circulos del patron
@@ -53,34 +54,6 @@ int allowPrint(void) {
     }
   }
 }
-
-//Imprime la escena de la clave de seguridad
-//Este no sale de aca hasta que se termina de
-//realizar el patron
-void printSecureScene(void) {
-  tft.fillScreen(BLACK);
-  tft.setCursor(5, 260);
-  tft.setTextSize(3);
-  tft.setTextColor(WHITE);
-  tft.println("Ingrese el    patron");
-
-  while (!isCorrect) {
-
-    int cw = tft.width() / 4;
-    int top = printPatronCircles(cw);
-
-    //activar la pantalla touch para recibir el input del usuario
-    allowPrint();
-
-    //imprimir de nuevo, si gano, transicionar a la otra vista
-    printPatronCircles(cw, true);
-    delay(1500);
-  }
-
-  changeCurrentScene(START);
-  isCorrect = false;
-}
-
 
 //Imprimir estado inicial del sistema
 //el estado inicial muestra el nombre del producto
@@ -105,4 +78,65 @@ void printFirstScene(void)
   tft.setTextSize(1);
 
   tft.println("Esperando modo seguro...");
+}
+
+//Imprime la escena de la clave de seguridad
+//Este no sale de aca hasta que se termina de
+//realizar el patron
+void printSecureScene(void) {
+  tft.fillScreen(BLACK);
+  tft.setCursor(0, 260);
+  tft.setTextSize(3);
+  tft.setTextColor(WHITE);
+  tft.println("Ingrese el    patron");
+
+  while (!isCorrect) {
+
+    int cw = tft.width() / 4;
+    int top = printPatronCircles(cw);
+
+    //activar la pantalla touch para recibir el input del usuario
+    allowPrint();
+
+    //imprimir de nuevo, si gano, transicionar a la otra vista
+    printPatronCircles(cw, true);
+    delay(1500);
+  }
+
+  changeCurrentScene(START);
+  isCorrect = false;
+}
+
+
+//Realizar retroalimentacion de que existe un bpm en curso
+void printBPMScene(void) {
+  tft.fillScreen(BLACK);
+  tft.setTextColor(WHITE);
+  tft.setCursor(60, 30);
+  tft.setTextSize(6);
+  tft.print("BPM: ");
+
+  int bpm = -1;
+  int tmp_bpm = 0;
+  long now = millis();
+  pulses.start();
+  
+  while (millis() - now <= pulses.BPM_MS) {
+    tmp_bpm = pulses.getBPM();
+
+    if (tmp_bpm != bpm) {
+      bpm = tmp_bpm;
+      tft.fillRect(25, 85, 190, 110, RED);
+      tft.setCursor(95, 115);
+      tft.print(bpm);
+    }
+    
+    delay(20);
+  }
+  
+  pulses.end();
+  
+  Serial.println(">> finalizado");
+
+  changeCurrentScene(START);
 }

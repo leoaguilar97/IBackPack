@@ -7,12 +7,13 @@ class WaterSensor {
     //constructor del sensor
     WaterSensor() {
       pinMode(ws_pin, INPUT);
-      Serial.println("Sensor de agua inicializado");
     }
 
     //metodo comun que realiza 
-    sense() {
+    int sense() {
       waterValue = analogRead(ws_pin);
       Serial.println(">> Sensor de agua: " + waterValue);
+      
+      return waterValue;
     }
-}
+};
